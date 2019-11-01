@@ -1,20 +1,28 @@
 <?php
-include 'functions.php';
+
+declare(strict_types = 1);
+
+require_once 'functions.php';
 
 $functions = new Functions();
 
 if (isset($_POST['createRelease'])) {
+    $data = [
+        'startDate' => (new DateTime(date('d M Y')))->format('c'),
+        'archived' => false,
+        'name' => 'release/x/' . $_POST['releaseType'],
+        'description' => $_POST['description'],
+        'projectId' => $_POST['project'],
+        'released' => false,
+    ];
+
+    if (!empty($_POST['releaseDate'])) {
+        $data['releaseDate'] = (new DateTime($_POST['releaseDate']))->format('c');
+    }
+
     $release = json_decode(
         $functions->curlRequest(
-            json_encode([
-                'startDate' => (new DateTime(date('d M Y')))->format('c'),
-                'archived' => false,
-                'name' => 'release/x/' . $_POST['releaseType'],
-                'description' => $_POST['description'],
-                'projectId' => $_POST['project'],
-                'released' => false,
-                'releaseDate' => (new DateTime($_POST['releaseDate']))->format('c'),
-            ]),
+            json_encode($data),
             'version',
             'POST'
         )
@@ -33,28 +41,36 @@ if (isset($_POST['createRelease'])) {
         )
     );
 
-    echo 'Release <strong>' . $release->name . '</strong> has been created';
+    if ($release) {
+        echo 'Release <strong>' . $release->name . '</strong> has been created';
+    }
 }
 
 if (isset($_POST['updateRelease'])) {
     $release = explode('---', $_POST['release']);
+    $data = [
+        'archived' => false,
+        'name' => 'release/' . $release[1] . '/' . $_POST['releaseType'],
+        'projectId' => $release[0],
+        'released' => false,
+        'description' => $_POST['description'],
+    ];
+
+    if (!empty($_POST['releaseDate'])) {
+        $data['releaseDate'] = (new DateTime($_POST['releaseDate']))->format('c');
+    }
 
     $newRelease =json_decode(
         $functions->curlRequest(
-            json_encode([
-                'archived' => false,
-                'name' => 'release/' . $release[1] . '/' . $_POST['releaseType'],
-                'projectId' => $release[0],
-                'released' => false,
-                'description' => $_POST['description'],
-                'releaseDate' => (new DateTime($_POST['releaseDate']))->format('c'),
-            ]),
+            json_encode($data),
             'version/' . $release[1],
             'PUT'
         )
     );
 
-    echo 'Release <strong>' . $newRelease->name . '</strong> has been updated';
+    if ($newRelease) {
+        echo 'Release <strong>' . $newRelease->name . '</strong> has been updated';
+    }
 }
 
 $projects = json_decode($functions->getAll('project'), true);

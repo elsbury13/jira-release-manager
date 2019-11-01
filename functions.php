@@ -1,9 +1,12 @@
 <?php
+
+declare(strict_types = 1);
+
 require_once '.env';
 
 class Functions
 {
-	public function curlRequest($data, $urlType, $type)
+	public function curlRequest(string $data, string $urlType, string $type): ?string
 	{
 	    $ch = curl_init();
 
@@ -26,7 +29,7 @@ class Functions
 	    return $release;
 	}
 
-	public function getAll($urlType)
+	public function getAll(string $urlType): ?string
 	{
 	    $ch = curl_init();
 
@@ -46,7 +49,7 @@ class Functions
 	    return $release;
 	}
 
-	public function getReleases($projects)
+	public function getReleases(array $projects): array
 	{
 		$combinedProjects = [];
 
@@ -57,22 +60,25 @@ class Functions
 		$releases = [];
 
 		foreach ($combinedProjects as $projectId => $projectName) {
-		     $releases[$projectId . '---' . $projectName] = json_decode($this->getAll('project/'. $projectId . '/version?status=unreleased'), true);
+		     $releases[$projectId . '---' . $projectName] = json_decode(
+				$this->getAll('project/'. $projectId . '/version?status=unreleased'),
+				true
+		     );
 		}
 
-		$releaseDisplay = [];
+		$allReleaseInfo = [];
 
 		foreach ($releases as $projectInformation => $release) {
 		    $project = explode('---', $projectInformation);
 		    foreach ($release as $details) {
 		        if (is_array($details)) {
 		            foreach ($details as $actualReleases) {
-		                $releaseDisplay[$project[0] . '---' . $actualReleases['id']] = $project[1] . ' - ' . $actualReleases['name'];
+		                $allReleaseInfo[$project[0] . '---' . $actualReleases['id']] = $project[1] . ' - ' . $actualReleases['name'];
 		            }
 		        }
 		    }
 		}
 
-		return $releaseDisplay;
+		return $allReleaseInfo;
 	}
 }
